@@ -9,10 +9,14 @@ import ProfilePage from './pages/ProfilePage'
 import { useAuthStore } from './store/useAuthStore'
 import {Loader} from 'lucide-react'
 import { Toaster } from 'react-hot-toast'
+import { useThemeStore } from './store/useThemeStore'
 
 function App() {
-  const {authUser,checkAuth,isCheckingAuth} = useAuthStore()
+  const {authUser,checkAuth,isCheckingAuth,onlineUsers} = useAuthStore()
+  const {theme} = useThemeStore();
 
+  console.log("The online users are: ",onlineUsers)
+  
   useEffect(() => {
     checkAuth()
   },[checkAuth])
@@ -23,14 +27,14 @@ function App() {
     </div>
   )
   return (
-    <div >
+    <div data-theme={theme}>
       <NavBar/>
       <Routes>
         <Route path="/" element={authUser ? <HomePage/> : <Navigate to="/login"/>}/>
         <Route path="/signup" element={!authUser ? <SignUpPage/> : <Navigate to="/"/>}/>
-        <Route path="/login" element={<LoginPage/>}/>
+        <Route path="/login" element={!authUser ? <LoginPage/> : <Navigate to="/"/>}/>
         <Route path="/settings" element={<SettingsPage/>}/>
-        <Route path="/profile" element={<ProfilePage/>}/>
+        <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />}/>
       </Routes>
 
       <Toaster/>

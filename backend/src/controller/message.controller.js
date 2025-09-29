@@ -1,4 +1,5 @@
 import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId, io } from "../lib/socket.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 
@@ -24,8 +25,9 @@ export const getMessages = async (req,res) =>{
         {senderId:myId, receiverId:userToChatId},
         {senderId:userToChatId, receiverId:myId}
       ]
-    })
+    }).sort({createdAt: 1});
 
+    
     res.status(200).json(messages)
   }catch(error){
     console.log("Error in getMessages controller: ",error.message);
@@ -40,10 +42,16 @@ export const sendMessage = async (req,res) =>{
 
     const senderId = req.user._id;
 
+    console.log("SendMessage request:", { text, hasImage: !!image, receiverId, senderId });
+
     let imageUrl;
-    if(imageUrl){
-      //Upload image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
+    if(image){
+      console.log("Uploading image to Cloudinary...");
+      //Upload base64 image to cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(image, {
+        resource_type: "auto",
+        folder: "chat-app"
+      });
       imageUrl = uploadResponse.secure_url;
 
     }
@@ -57,9 +65,15 @@ export const sendMessage = async (req,res) =>{
 
     await newMessage.save();
 
+    //Real time chating using socket.io
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if(receiverId){
+      io.to(receiverSocketId).emit("newMessage",newMessage);
+    }
     res.status(201).json(newMessage)
   } catch (error) {
-    console.log("Error in getMessages controller: ",error.message);
+    console.log("Error in sendMessage controller: ",error.message);
+    console.log("Full error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
