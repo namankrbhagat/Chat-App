@@ -13,14 +13,25 @@ import {app,server} from './lib/socket.js'
 // Always load .env from the backend directory (works regardless of cwd)
 dotenv.config()
 
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Increase body size limits to handle base64 images
 app.use(express.json())
-app.use(express.urlencoded())
+app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean)
+
 app.use(cors({
-  origin:"http://localhost:5173",
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    if (process.env.NODE_ENV === 'production') return callback(null, true)
+    return callback(new Error('Not allowed by CORS'))
+  },
   credentials:true
 }))
 
@@ -30,10 +41,14 @@ app.use("/api/auth",authRoutes)
 app.use("/api/messages",messageRoutes)
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  const clientPath = path.join(__dirname, "../../frontend/dist")
+  app.use(express.static(clientPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+      return res.status(404).end()
+    }
+    res.sendFile(path.join(clientPath, "index.html"));
   });
 }
 

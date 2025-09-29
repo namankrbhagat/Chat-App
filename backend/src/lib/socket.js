@@ -5,9 +5,19 @@ import http from 'http'
 const app = express();
 const server = http.createServer(app);
 
+const allowedSocketOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean)
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true)
+      if (allowedSocketOrigins.includes(origin)) return callback(null, true)
+      if (process.env.NODE_ENV === 'production') return callback(null, true)
+      return callback(new Error('Not allowed by CORS'))
+    },
     credentials: true,
   },
 })
