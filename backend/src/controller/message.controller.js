@@ -11,7 +11,7 @@ export const getUsersForSidebar = async (req,res) =>{
     res.status(200).json(filterdUsers)
   }catch(error){
     console.error("Error in getUsersForSidebar: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
 
@@ -31,7 +31,7 @@ export const getMessages = async (req,res) =>{
     res.status(200).json(messages)
   }catch(error){
     console.log("Error in getMessages controller: ",error.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
 
@@ -67,13 +67,13 @@ export const sendMessage = async (req,res) =>{
 
     //Real time chating using socket.io
     const receiverSocketId = getReceiverSocketId(receiverId);
-    if(receiverId){
+    if(receiverSocketId){
       io.to(receiverSocketId).emit("newMessage",newMessage);
     }
     res.status(201).json(newMessage)
   } catch (error) {
     console.log("Error in sendMessage controller: ",error.message);
     console.log("Full error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
