@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: chatapp-backend
+    name: chatapp-fullstack
     env: node
     plan: free
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd backend && npm install && cd ../frontend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
