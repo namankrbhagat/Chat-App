@@ -25,8 +25,3 @@ dist-ssr
 
 
 .env
-
-render.yaml
-atlas-setup-guide.md
-DEPLOYMENT_CHECKLIST.md
-DEPLOYMENT.md
